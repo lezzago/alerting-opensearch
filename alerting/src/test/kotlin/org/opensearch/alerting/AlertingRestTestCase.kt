@@ -46,9 +46,14 @@ import org.opensearch.alerting.model.Alert
 import org.opensearch.alerting.model.BucketLevelTrigger
 import org.opensearch.alerting.model.Monitor
 import org.opensearch.alerting.model.QueryLevelTrigger
+import org.opensearch.alerting.model.destination.Chime
+import org.opensearch.alerting.model.destination.CustomWebhook
 import org.opensearch.alerting.model.destination.Destination
+import org.opensearch.alerting.model.destination.Slack
+import org.opensearch.alerting.model.destination.email.Email
 import org.opensearch.alerting.model.destination.email.EmailAccount
 import org.opensearch.alerting.model.destination.email.EmailGroup
+import org.opensearch.alerting.model.destination.email.Recipient
 import org.opensearch.alerting.settings.AlertingSettings
 import org.opensearch.alerting.settings.DestinationSettings
 import org.opensearch.alerting.util.DestinationType
@@ -140,6 +145,7 @@ abstract class AlertingRestTestCase : ODFERestTestCase() {
             NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE,
             response.entity.content
         ).map()
+        Thread.sleep(1000)
         return destination.copy(
             id = destinationJson["_id"] as String,
             version = (destinationJson["_version"] as Int).toLong(),
@@ -154,7 +160,8 @@ abstract class AlertingRestTestCase : ODFERestTestCase() {
             emptyMap(),
             destination.toHttpEntity()
         )
-        assertEquals("Unable to delete destination", RestStatus.OK, response.restStatus())
+        assertEquals("Unable to create a new destination", RestStatus.OK, response.restStatus())
+        Thread.sleep(1000)
 
         return response
     }
@@ -171,6 +178,7 @@ abstract class AlertingRestTestCase : ODFERestTestCase() {
             NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE,
             response.entity.content
         ).map()
+        Thread.sleep(1000)
         return destination.copy(id = destinationJson["_id"] as String, version = (destinationJson["_version"] as Int).toLong())
     }
 
@@ -197,7 +205,6 @@ abstract class AlertingRestTestCase : ODFERestTestCase() {
                 "email_account" -> emailAccount = EmailAccount.parse(parser)
             }
         }
-
         return emailAccount.copy(id = id, version = version)
     }
 
@@ -213,6 +220,7 @@ abstract class AlertingRestTestCase : ODFERestTestCase() {
             NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE,
             response.entity.content
         ).map()
+        Thread.sleep(1000)
         return emailAccount.copy(id = emailAccountJson["_id"] as String)
     }
 
@@ -234,6 +242,7 @@ abstract class AlertingRestTestCase : ODFERestTestCase() {
             NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE,
             response.entity.content
         ).map()
+        Thread.sleep(1000)
         return emailAccount.copy(id = emailAccountJson["_id"] as String)
     }
 
@@ -260,7 +269,6 @@ abstract class AlertingRestTestCase : ODFERestTestCase() {
                 "email_group" -> emailGroup = EmailGroup.parse(parser)
             }
         }
-
         return emailGroup.copy(id = id, version = version)
     }
 
@@ -276,6 +284,7 @@ abstract class AlertingRestTestCase : ODFERestTestCase() {
             NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE,
             response.entity.content
         ).map()
+        Thread.sleep(1000)
         return emailGroup.copy(id = emailGroupJson["_id"] as String)
     }
 
@@ -297,6 +306,7 @@ abstract class AlertingRestTestCase : ODFERestTestCase() {
             NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE,
             response.entity.content
         ).map()
+        Thread.sleep(1000)
         return emailGroup.copy(id = emailGroupJson["_id"] as String)
     }
 
@@ -306,7 +316,7 @@ abstract class AlertingRestTestCase : ODFERestTestCase() {
             "GET",
             "$DESTINATION_BASE_URI/${destination.id}"
         )
-        assertEquals("Unable to update a destination", RestStatus.OK, response.restStatus())
+        assertEquals("Unable to get a destination", RestStatus.OK, response.restStatus())
         val destinationJson = jsonXContent.createParser(
             NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE,
             response.entity.content
@@ -337,7 +347,7 @@ abstract class AlertingRestTestCase : ODFERestTestCase() {
             null,
             header
         )
-        assertEquals("Unable to update a destination", RestStatus.OK, response.restStatus())
+        assertEquals("Unable to get destinations", RestStatus.OK, response.restStatus())
         val destinationJson = jsonXContent.createParser(
             NamedXContentRegistry.EMPTY, LoggingDeprecationHandler.INSTANCE,
             response.entity.content
@@ -346,15 +356,84 @@ abstract class AlertingRestTestCase : ODFERestTestCase() {
     }
 
     private fun getTestDestination(): Destination {
+        val slack = Slack("https://hooks.slack.com/services/slackId")
         return Destination(
-            type = DestinationType.TEST_ACTION,
+            type = DestinationType.SLACK,
+            name = "test",
+            user = randomUser(),
+            lastUpdateTime = Instant.now(),
+            chime = null,
+            slack = slack,
+            customWebhook = null,
+            email = null
+        )
+    }
+
+    fun getSlackDestination(): Destination {
+        val slack = Slack("https://hooks.slack.com/services/slackId")
+        return Destination(
+            type = DestinationType.SLACK,
+            name = "test",
+            user = randomUser(),
+            lastUpdateTime = Instant.now(),
+            chime = null,
+            slack = slack,
+            customWebhook = null,
+            email = null
+        )
+    }
+
+    fun getChimeDestination(): Destination {
+        val chime = Chime("https://hooks.chime.aws/incomingwebhooks/chimeId")
+        return Destination(
+            type = DestinationType.CHIME,
+            name = "test",
+            user = randomUser(),
+            lastUpdateTime = Instant.now(),
+            chime = chime,
+            slack = null,
+            customWebhook = null,
+            email = null
+        )
+    }
+
+    fun getCustomWebhookDestination(): Destination {
+        val customWebhook = CustomWebhook(
+            "https://hooks.slack.com/services/customWebhookId",
+            null,
+            null,
+            80,
+            null,
+            null,
+            emptyMap(),
+            emptyMap(),
+            null,
+            null
+        )
+        return Destination(
+            type = DestinationType.CUSTOM_WEBHOOK,
+            name = "test",
+            user = randomUser(),
+            lastUpdateTime = Instant.now(),
+            chime = null,
+            slack = null,
+            customWebhook = customWebhook,
+            email = null
+        )
+    }
+
+    fun getEmailDestination(): Destination {
+        val recipient = Recipient(Recipient.RecipientType.EMAIL, null, "test@email.com")
+        val email = Email("emailAccountId", listOf(recipient))
+        return Destination(
+            type = DestinationType.EMAIL,
             name = "test",
             user = randomUser(),
             lastUpdateTime = Instant.now(),
             chime = null,
             slack = null,
             customWebhook = null,
-            email = null
+            email = email
         )
     }
 
@@ -637,7 +716,7 @@ abstract class AlertingRestTestCase : ODFERestTestCase() {
         return StringEntity(toJsonString(), APPLICATION_JSON)
     }
 
-    private fun Destination.toJsonString(): String {
+    protected fun Destination.toJsonString(): String {
         val builder = XContentFactory.jsonBuilder()
         return shuffleXContent(toXContent(builder)).string()
     }

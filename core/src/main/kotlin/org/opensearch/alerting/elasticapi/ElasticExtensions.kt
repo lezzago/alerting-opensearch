@@ -28,12 +28,14 @@ package org.opensearch.alerting.elasticapi
 
 import kotlinx.coroutines.ThreadContextElement
 import kotlinx.coroutines.delay
+import org.apache.logging.log4j.LogManager
 import org.apache.logging.log4j.Logger
 import org.opensearch.OpenSearchException
 import org.opensearch.action.ActionListener
 import org.opensearch.action.bulk.BackoffPolicy
 import org.opensearch.action.search.SearchResponse
 import org.opensearch.action.search.ShardSearchFailure
+import org.opensearch.alerting.core.model.ScheduledJob
 import org.opensearch.client.OpenSearchClient
 import org.opensearch.common.bytes.BytesReference
 import org.opensearch.common.settings.Settings
@@ -60,6 +62,8 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
+private val logger = LogManager.getLogger(ScheduledJob::javaClass)
+
 /** Convert an object to maps and lists representation */
 fun ToXContent.convertToMap(): Map<String, Any> {
     val bytesReference = XContentHelper.toXContent(this, XContentType.JSON, false)
@@ -77,6 +81,29 @@ fun <T> BackoffPolicy.retry(block: () -> T): T {
             return block()
         } catch (e: OpenSearchException) {
             if (iter.hasNext() && e.isRetriable()) {
+                Thread.sleep(iter.next().millis)
+            } else {
+                throw e
+            }
+        }
+    } while (true)
+}
+
+/**
+ * Backs off and retries a lambda that makes a request. This retries on any Exception unless it detects the
+ * Notification plugin is not installed. This should not be called on any of the [standard][ThreadPool] executors
+ * since those executors are not meant to be blocked by sleeping.
+ */
+fun <T> BackoffPolicy.retryForNotification(block: () -> T): T {
+    val iter = iterator()
+    do {
+        try {
+            return block()
+        } catch (e: java.lang.Exception) {
+            val isMissingNotificationPlugin = e.message?.contains("failed to find action") ?: false
+            if (isMissingNotificationPlugin) {
+                throw OpenSearchException("Notification plugin is not installed. Please install the Notification plugin.", e)
+            } else if (iter.hasNext()) {
                 Thread.sleep(iter.next().millis)
             } else {
                 throw e

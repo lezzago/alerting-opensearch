@@ -26,36 +26,26 @@
 
 package org.opensearch.alerting.resthandler
 
-import org.opensearch.action.search.SearchRequest
-import org.opensearch.action.search.SearchResponse
+import org.apache.logging.log4j.LogManager
 import org.opensearch.alerting.AlertingPlugin
 import org.opensearch.alerting.action.SearchEmailGroupAction
-import org.opensearch.alerting.core.model.ScheduledJob.Companion.SCHEDULED_JOBS_INDEX
-import org.opensearch.alerting.model.destination.email.EmailGroup
-import org.opensearch.alerting.util.context
+import org.opensearch.alerting.action.SearchEmailGroupRequest
+import org.opensearch.alerting.model.Table
 import org.opensearch.client.node.NodeClient
-import org.opensearch.common.bytes.BytesReference
-import org.opensearch.common.xcontent.LoggingDeprecationHandler
-import org.opensearch.common.xcontent.ToXContent
-import org.opensearch.common.xcontent.XContentFactory
-import org.opensearch.common.xcontent.XContentType
-import org.opensearch.index.query.QueryBuilders
 import org.opensearch.rest.BaseRestHandler
-import org.opensearch.rest.BytesRestResponse
-import org.opensearch.rest.RestChannel
+import org.opensearch.rest.BaseRestHandler.RestChannelConsumer
 import org.opensearch.rest.RestHandler.ReplacedRoute
 import org.opensearch.rest.RestHandler.Route
 import org.opensearch.rest.RestRequest
-import org.opensearch.rest.RestResponse
-import org.opensearch.rest.RestStatus
-import org.opensearch.rest.action.RestResponseListener
-import org.opensearch.search.builder.SearchSourceBuilder
+import org.opensearch.rest.action.RestToXContentListener
 import java.io.IOException
 
 /**
  * Rest handlers to search for EmailGroup
  */
 class RestSearchEmailGroupAction : BaseRestHandler() {
+
+    private val log = LogManager.getLogger(RestSearchEmailGroupAction::class.java)
 
     override fun getName(): String {
         return "search_email_group_action"
@@ -84,45 +74,27 @@ class RestSearchEmailGroupAction : BaseRestHandler() {
 
     @Throws(IOException::class)
     override fun prepareRequest(request: RestRequest, client: NodeClient): RestChannelConsumer {
-        val searchSourceBuilder = SearchSourceBuilder()
-        searchSourceBuilder.parseXContent(request.contentOrSourceParamParser())
-        searchSourceBuilder.fetchSource(context(request))
+        log.debug("${request.method()} ${request.path()}")
 
-        // An exists query is added on top of the user's query to ensure that only documents of email_group type
-        // are searched
-        searchSourceBuilder.query(
-            QueryBuilders.boolQuery().must(searchSourceBuilder.query())
-                .filter(QueryBuilders.existsQuery(EmailGroup.EMAIL_GROUP_TYPE))
+        val sortString = request.param("sortString", "destination.name.keyword")
+        val sortOrder = request.param("sortOrder", "asc")
+        val size = request.paramAsInt("size", 20)
+        val startIndex = request.paramAsInt("startIndex", 0)
+        val searchString = request.param("searchString", "")
+
+        val table = Table(
+            sortOrder,
+            sortString,
+            null,
+            size,
+            startIndex,
+            searchString
         )
-            .seqNoAndPrimaryTerm(true)
-        val searchRequest = SearchRequest()
-            .source(searchSourceBuilder)
-            .indices(SCHEDULED_JOBS_INDEX)
+
+        val searchEmailGroupRequest = SearchEmailGroupRequest(table)
+
         return RestChannelConsumer { channel ->
-            client.execute(SearchEmailGroupAction.INSTANCE, searchRequest, searchEmailGroupResponse(channel))
-        }
-    }
-
-    private fun searchEmailGroupResponse(channel: RestChannel): RestResponseListener<SearchResponse> {
-        return object : RestResponseListener<SearchResponse>(channel) {
-            @Throws(Exception::class)
-            override fun buildResponse(response: SearchResponse): RestResponse {
-                if (response.isTimedOut) {
-                    return BytesRestResponse(RestStatus.REQUEST_TIMEOUT, response.toString())
-                }
-
-                for (hit in response.hits) {
-                    XContentType.JSON.xContent().createParser(
-                        channel.request().xContentRegistry,
-                        LoggingDeprecationHandler.INSTANCE, hit.sourceAsString
-                    ).use { hitsParser ->
-                        val emailGroup = EmailGroup.parseWithType(hitsParser, hit.id, hit.version)
-                        val xcb = emailGroup.toXContent(XContentFactory.jsonBuilder(), ToXContent.EMPTY_PARAMS)
-                        hit.sourceRef(BytesReference.bytes(xcb))
-                    }
-                }
-                return BytesRestResponse(RestStatus.OK, response.toXContent(channel.newBuilder(), ToXContent.EMPTY_PARAMS))
-            }
+            client.execute(SearchEmailGroupAction.INSTANCE, searchEmailGroupRequest, RestToXContentListener(channel))
         }
     }
 }

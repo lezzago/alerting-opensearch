@@ -35,6 +35,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.apache.logging.log4j.LogManager
 import org.opensearch.action.bulk.BackoffPolicy
+import org.opensearch.alerting.actionconverter.DestinationActionsConverter.Companion.convertGetNotificationConfigResponseToGetDestinationsResponse
 import org.opensearch.alerting.alerts.AlertIndices
 import org.opensearch.alerting.alerts.moveAlerts
 import org.opensearch.alerting.core.JobRunner
@@ -78,15 +79,22 @@ import org.opensearch.alerting.settings.LegacyOpenDistroDestinationSettings.Comp
 import org.opensearch.alerting.util.getActionExecutionPolicy
 import org.opensearch.alerting.util.getBucketKeysHash
 import org.opensearch.alerting.util.getCombinedTriggerRunResult
+import org.opensearch.alerting.util.NotificationAPIUtils
 import org.opensearch.alerting.util.isADMonitor
 import org.opensearch.alerting.util.isAllowed
 import org.opensearch.alerting.util.isBucketLevelMonitor
 import org.opensearch.client.Client
+import org.opensearch.client.node.NodeClient
 import org.opensearch.cluster.service.ClusterService
 import org.opensearch.common.Strings
 import org.opensearch.common.component.AbstractLifecycleComponent
 import org.opensearch.common.settings.Settings
 import org.opensearch.common.xcontent.NamedXContentRegistry
+import org.opensearch.commons.notifications.NotificationConstants
+import org.opensearch.commons.notifications.action.GetNotificationConfigRequest
+import org.opensearch.commons.notifications.action.SendNotificationRequest
+import org.opensearch.commons.notifications.model.ChannelMessage
+import org.opensearch.commons.notifications.model.EventSource
 import org.opensearch.script.Script
 import org.opensearch.script.ScriptService
 import org.opensearch.script.TemplateScript
@@ -671,18 +679,28 @@ object MonitorRunner : JobRunner, CoroutineScope, AbstractLifecycleComponent() {
             }
             if (!dryrun) {
                 withContext(Dispatchers.IO) {
-                    val destination = AlertingConfigAccessor.getDestinationInfo(client, xContentRegistry, action.destinationId)
+                    val getNotificationConfigRequest = GetNotificationConfigRequest(
+                        setOf(action.destinationId),
+                        0,
+                        1,
+                        null,
+                        null,
+                        emptyMap()
+                    )
+                    val getNotificationResponse = NotificationAPIUtils.getNotificationConfig(
+                        client as NodeClient,
+                        getNotificationConfigRequest
+                    )
+                    val getDestinationResponse = convertGetNotificationConfigResponseToGetDestinationsResponse(getNotificationResponse)
+                    val destination = getDestinationResponse.destinations[0]
                     if (!destination.isAllowed(allowList)) {
                         throw IllegalStateException("Monitor contains a Destination type that is not allowed: ${destination.type}")
                     }
-
-                    val destinationCtx = destinationContextFactory.getDestinationContext(destination)
-                    actionOutput[MESSAGE_ID] = destination.publish(
-                        actionOutput[SUBJECT],
-                        actionOutput[MESSAGE]!!,
-                        destinationCtx,
-                        hostDenyList
-                    )
+                    val title = if (actionOutput[SUBJECT] != null) actionOutput[SUBJECT]!! else ""
+                    val eventSource = EventSource(title, action.destinationId, NotificationConstants.FEATURE_ALERTING)
+                    val channelMessage = ChannelMessage(actionOutput[MESSAGE]!!, null, null)
+                    val sendRequest = SendNotificationRequest(eventSource, channelMessage, listOf(action.destinationId), null)
+                    actionOutput[MESSAGE_ID] = NotificationAPIUtils.sendNotification(client as NodeClient, sendRequest).notificationId
                 }
             }
             ActionRunResult(action.id, action.name, actionOutput, false, currentTime(), null)
@@ -703,18 +721,28 @@ object MonitorRunner : JobRunner, CoroutineScope, AbstractLifecycleComponent() {
             }
             if (!dryrun) {
                 withContext(Dispatchers.IO) {
-                    val destination = AlertingConfigAccessor.getDestinationInfo(client, xContentRegistry, action.destinationId)
+                    val getNotificationConfigRequest = GetNotificationConfigRequest(
+                        setOf(action.destinationId),
+                        0,
+                        1,
+                        null,
+                        null,
+                        emptyMap()
+                    )
+                    val getNotificationResponse = NotificationAPIUtils.getNotificationConfig(
+                        client as NodeClient,
+                        getNotificationConfigRequest
+                    )
+                    val getDestinationResponse = convertGetNotificationConfigResponseToGetDestinationsResponse(getNotificationResponse)
+                    val destination = getDestinationResponse.destinations[0]
                     if (!destination.isAllowed(allowList)) {
                         throw IllegalStateException("Monitor contains a Destination type that is not allowed: ${destination.type}")
                     }
-
-                    val destinationCtx = destinationContextFactory.getDestinationContext(destination)
-                    actionOutput[MESSAGE_ID] = destination.publish(
-                        actionOutput[SUBJECT],
-                        actionOutput[MESSAGE]!!,
-                        destinationCtx,
-                        hostDenyList
-                    )
+                    val title = if (actionOutput[SUBJECT] != null) actionOutput[SUBJECT]!! else ""
+                    val eventSource = EventSource(title, action.destinationId, NotificationConstants.FEATURE_ALERTING)
+                    val channelMessage = ChannelMessage(actionOutput[MESSAGE]!!, null, null)
+                    val sendRequest = SendNotificationRequest(eventSource, channelMessage, listOf(action.destinationId), null)
+                    actionOutput[MESSAGE_ID] = NotificationAPIUtils.sendNotification(client as NodeClient, sendRequest).notificationId
                 }
             }
             ActionRunResult(action.id, action.name, actionOutput, false, currentTime(), null)

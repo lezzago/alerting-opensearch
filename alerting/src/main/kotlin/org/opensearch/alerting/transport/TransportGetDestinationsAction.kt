@@ -27,6 +27,7 @@
 package org.opensearch.alerting.transport
 
 import org.apache.logging.log4j.LogManager
+import org.opensearch.OpenSearchStatusException
 import org.opensearch.action.ActionListener
 import org.opensearch.action.search.SearchRequest
 import org.opensearch.action.search.SearchResponse
@@ -35,12 +36,15 @@ import org.opensearch.action.support.HandledTransportAction
 import org.opensearch.alerting.action.GetDestinationsAction
 import org.opensearch.alerting.action.GetDestinationsRequest
 import org.opensearch.alerting.action.GetDestinationsResponse
+import org.opensearch.alerting.actionconverter.DestinationActionsConverter.Companion.convertGetDestinationsRequestToGetNotificationConfigRequest
+import org.opensearch.alerting.actionconverter.DestinationActionsConverter.Companion.convertGetNotificationConfigResponseToGetDestinationsResponse
 import org.opensearch.alerting.core.model.ScheduledJob
 import org.opensearch.alerting.elasticapi.addFilter
 import org.opensearch.alerting.model.destination.Destination
 import org.opensearch.alerting.settings.AlertingSettings
 import org.opensearch.alerting.util.AlertingException
-import org.opensearch.client.Client
+import org.opensearch.alerting.util.NotificationAPIUtils
+import org.opensearch.client.node.NodeClient
 import org.opensearch.cluster.service.ClusterService
 import org.opensearch.common.Strings
 import org.opensearch.common.inject.Inject
@@ -68,7 +72,7 @@ private val log = LogManager.getLogger(TransportGetDestinationsAction::class.jav
 
 class TransportGetDestinationsAction @Inject constructor(
     transportService: TransportService,
-    val client: Client,
+    val client: NodeClient,
     clusterService: ClusterService,
     actionFilters: ActionFilters,
     val settings: Settings,
@@ -88,6 +92,30 @@ class TransportGetDestinationsAction @Inject constructor(
         getDestinationsRequest: GetDestinationsRequest,
         actionListener: ActionListener<GetDestinationsResponse>
     ) {
+
+        val getDestinationsResponse: GetDestinationsResponse
+        try {
+            val getRequest = convertGetDestinationsRequestToGetNotificationConfigRequest(getDestinationsRequest)
+            val getNotificationConfigResponse = NotificationAPIUtils.getNotificationConfig(client, getRequest)
+            getDestinationsResponse = convertGetNotificationConfigResponseToGetDestinationsResponse(getNotificationConfigResponse)
+            if (getDestinationsRequest.destinationId != null) {
+                if (getDestinationsResponse.destinations.isEmpty()) {
+                    actionListener.onFailure(
+                        OpenSearchStatusException(
+                            "Destination ${getDestinationsRequest.destinationId} cannot be found",
+                            RestStatus.NOT_FOUND
+                        )
+                    )
+                } else {
+                    actionListener.onResponse(getDestinationsResponse)
+                }
+                return
+            }
+        } catch (e: Exception) {
+            actionListener.onFailure(AlertingException.wrap(e))
+            return
+        }
+
         val userStr = client.threadPool().threadContext.getTransient<String>(
             ConfigConstants.OPENSEARCH_SECURITY_USER_INFO_THREAD_CONTEXT
         )
@@ -105,7 +133,7 @@ class TransportGetDestinationsAction @Inject constructor(
 
         val searchSourceBuilder = SearchSourceBuilder()
             .sort(sortBuilder)
-            .size(tableProp.size)
+            .size(tableProp.size - getDestinationsResponse.destinations.size)
             .from(tableProp.startIndex)
             .fetchSource(FetchSourceContext(true, Strings.EMPTY_ARRAY, Strings.EMPTY_ARRAY))
             .seqNoAndPrimaryTerm(true)
@@ -114,7 +142,7 @@ class TransportGetDestinationsAction @Inject constructor(
             .must(QueryBuilders.existsQuery("destination"))
 
         if (!getDestinationsRequest.destinationId.isNullOrBlank())
-            queryBuilder.filter(QueryBuilders.termQuery("_id", getDestinationsRequest.destinationId))
+            queryBuilder.filter(QueryBuilders.termQuery("_id", getDestinationsRequest.destinationId as String))
 
         if (getDestinationsRequest.destinationType != "ALL")
             queryBuilder.filter(QueryBuilders.termQuery("destination.type", getDestinationsRequest.destinationType))
@@ -132,34 +160,39 @@ class TransportGetDestinationsAction @Inject constructor(
         searchSourceBuilder.query(queryBuilder)
 
         client.threadPool().threadContext.stashContext().use {
-            resolve(searchSourceBuilder, actionListener, user)
+            resolve(searchSourceBuilder, getDestinationsResponse, actionListener, user)
         }
     }
 
     fun resolve(
         searchSourceBuilder: SearchSourceBuilder,
+        getDestinationsResponse: GetDestinationsResponse,
         actionListener: ActionListener<GetDestinationsResponse>,
         user: User?
     ) {
         if (user == null) {
             // user is null when: 1/ security is disabled. 2/when user is super-admin.
-            search(searchSourceBuilder, actionListener)
+            search(searchSourceBuilder, getDestinationsResponse, actionListener)
         } else if (!filterByEnabled) {
             // security is enabled and filterby is disabled.
-            search(searchSourceBuilder, actionListener)
+            search(searchSourceBuilder, getDestinationsResponse, actionListener)
         } else {
             // security is enabled and filterby is enabled.
             try {
                 log.info("Filtering result by: ${user.backendRoles}")
                 addFilter(user, searchSourceBuilder, "destination.user.backend_roles.keyword")
-                search(searchSourceBuilder, actionListener)
+                search(searchSourceBuilder, getDestinationsResponse, actionListener)
             } catch (ex: IOException) {
                 actionListener.onFailure(AlertingException.wrap(ex))
             }
         }
     }
 
-    fun search(searchSourceBuilder: SearchSourceBuilder, actionListener: ActionListener<GetDestinationsResponse>) {
+    fun search(
+        searchSourceBuilder: SearchSourceBuilder,
+        getDestinationsResponse: GetDestinationsResponse,
+        actionListener: ActionListener<GetDestinationsResponse>
+    ) {
         val searchRequest = SearchRequest()
             .source(searchSourceBuilder)
             .indices(ScheduledJob.SCHEDULED_JOBS_INDEX)
@@ -167,7 +200,7 @@ class TransportGetDestinationsAction @Inject constructor(
             searchRequest,
             object : ActionListener<SearchResponse> {
                 override fun onResponse(response: SearchResponse) {
-                    val totalDestinationCount = response.hits.totalHits?.value?.toInt()
+                    var totalDestinationCount = response.hits.totalHits?.value?.toInt() ?: 0
                     val destinations = mutableListOf<Destination>()
                     for (hit in response.hits) {
                         val id = hit.id
@@ -179,13 +212,22 @@ class TransportGetDestinationsAction @Inject constructor(
                         XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.nextToken(), xcp)
                         XContentParserUtils.ensureExpectedToken(XContentParser.Token.FIELD_NAME, xcp.nextToken(), xcp)
                         XContentParserUtils.ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.nextToken(), xcp)
-                        destinations.add(Destination.parse(xcp, id, version, seqNo, primaryTerm))
+                        val destination = Destination.parse(xcp, id, version, seqNo, primaryTerm)
+                        destinations.add(destination)
                     }
-                    actionListener.onResponse(GetDestinationsResponse(RestStatus.OK, totalDestinationCount, destinations))
+                    totalDestinationCount += getDestinationsResponse.totalDestinations ?: 0
+                    destinations.addAll(getDestinationsResponse.destinations)
+                    val getResponse = GetDestinationsResponse(
+                        RestStatus.OK,
+                        totalDestinationCount,
+                        destinations
+                    )
+                    actionListener.onResponse(getResponse)
                 }
 
                 override fun onFailure(t: Exception) {
-                    actionListener.onFailure(AlertingException.wrap(t))
+                    log.warn("Failed to get destinations from alerting config index", t)
+                    actionListener.onResponse(getDestinationsResponse)
                 }
             }
         )

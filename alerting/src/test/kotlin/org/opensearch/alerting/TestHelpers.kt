@@ -53,10 +53,17 @@ import org.opensearch.alerting.model.action.AlertCategory
 import org.opensearch.alerting.model.action.PerAlertActionScope
 import org.opensearch.alerting.model.action.PerExecutionActionScope
 import org.opensearch.alerting.model.action.Throttle
+import org.opensearch.alerting.model.destination.Chime
+import org.opensearch.alerting.model.destination.CustomWebhook
+import org.opensearch.alerting.model.destination.Destination
+import org.opensearch.alerting.model.destination.Slack
+import org.opensearch.alerting.model.destination.email.Email
 import org.opensearch.alerting.model.destination.email.EmailAccount
 import org.opensearch.alerting.model.destination.email.EmailEntry
 import org.opensearch.alerting.model.destination.email.EmailGroup
 import org.opensearch.alerting.util.getBucketKeysHash
+import org.opensearch.alerting.model.destination.email.Recipient
+import org.opensearch.alerting.util.DestinationType
 import org.opensearch.client.Request
 import org.opensearch.client.RequestOptions
 import org.opensearch.client.Response
@@ -221,6 +228,74 @@ fun randomEmailGroup(
     emails: List<EmailEntry> = (1..randomInt(10)).map { EmailEntry(email = OpenSearchRestTestCase.randomAlphaOfLength(5) + "@email.com") }
 ): EmailGroup {
     return EmailGroup(name = name, emails = emails)
+}
+
+fun getSlackDestination(): Destination {
+    val slack = Slack("https://hooks.slack.com/services/slackId")
+    return Destination(
+        type = DestinationType.SLACK,
+        name = "test",
+        user = randomUser(),
+        lastUpdateTime = Instant.now(),
+        chime = null,
+        slack = slack,
+        customWebhook = null,
+        email = null
+    )
+}
+
+fun getChimeDestination(): Destination {
+    val chime = Chime("https://hooks.chime.aws/incomingwebhooks/chimeId")
+    return Destination(
+        type = DestinationType.CHIME,
+        name = "test",
+        user = randomUser(),
+        lastUpdateTime = Instant.now(),
+        chime = chime,
+        slack = null,
+        customWebhook = null,
+        email = null
+    )
+}
+
+fun getCustomWebhookDestination(): Destination {
+    val customWebhook = CustomWebhook(
+        "https://hooks.slack.com/services/customWebhookId",
+        null,
+        null,
+        80,
+        null,
+        null,
+        emptyMap(),
+        emptyMap(),
+        null,
+        null
+    )
+    return Destination(
+        type = DestinationType.CUSTOM_WEBHOOK,
+        name = "test",
+        user = randomUser(),
+        lastUpdateTime = Instant.now(),
+        chime = null,
+        slack = null,
+        customWebhook = customWebhook,
+        email = null
+    )
+}
+
+fun getEmailDestination(): Destination {
+    val recipient = Recipient(Recipient.RecipientType.EMAIL, null, "test@email.com")
+    val email = Email("emailAccountId", listOf(recipient))
+    return Destination(
+        type = DestinationType.EMAIL,
+        name = "test",
+        user = randomUser(),
+        lastUpdateTime = Instant.now(),
+        chime = null,
+        slack = null,
+        customWebhook = null,
+        email = email
+    )
 }
 
 fun randomScript(source: String = "return " + OpenSearchRestTestCase.randomBoolean().toString()): Script = Script(source)

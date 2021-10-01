@@ -70,7 +70,8 @@ data class EmailAccount(
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         builder.startObject()
         if (params.paramAsBoolean("with_type", false)) builder.startObject(EMAIL_ACCOUNT_TYPE)
-        builder.field(SCHEMA_VERSION, schemaVersion)
+        builder.field(ID_FIELD, id)
+            .field(SCHEMA_VERSION, schemaVersion)
             .field(NAME_FIELD, name)
             .field(EMAIL_FIELD, email)
             .field(HOST_FIELD, host)
@@ -114,6 +115,7 @@ data class EmailAccount(
         const val EMAIL_ACCOUNT_TYPE = "email_account"
         const val NO_ID = ""
         const val NO_VERSION = 1L
+        const val ID_FIELD = "id"
         const val SCHEMA_VERSION = "schema_version"
         const val NAME_FIELD = "name"
         const val EMAIL_FIELD = "email"

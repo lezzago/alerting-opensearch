@@ -60,7 +60,8 @@ data class EmailGroup(
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         builder.startObject()
         if (params.paramAsBoolean("with_type", false)) builder.startObject(EMAIL_GROUP_TYPE)
-        builder.field(SCHEMA_VERSION, schemaVersion)
+        builder.field(ID_FIELD, id)
+            .field(SCHEMA_VERSION, schemaVersion)
             .field(NAME_FIELD, name)
             .field(EMAILS_FIELD, emails.toTypedArray())
         if (params.paramAsBoolean("with_type", false)) builder.endObject()
@@ -90,6 +91,7 @@ data class EmailGroup(
         const val EMAIL_GROUP_TYPE = "email_group"
         const val NO_ID = ""
         const val NO_VERSION = 1L
+        const val ID_FIELD = "id"
         const val SCHEMA_VERSION = "schema_version"
         const val NAME_FIELD = "name"
         const val EMAILS_FIELD = "emails"
@@ -115,6 +117,7 @@ data class EmailGroup(
                             emails.add(EmailEntry.parse(xcp))
                         }
                     }
+                    ID_FIELD -> xcp.skipChildren()
                     else -> {
                         throw IllegalStateException("Unexpected field: $fieldName, while parsing email group")
                     }
