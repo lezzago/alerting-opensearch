@@ -32,12 +32,12 @@ import org.opensearch.alerting.core.model.LocalUriInput
 import org.opensearch.alerting.core.model.Schedule
 import org.opensearch.alerting.core.model.ScheduledJob
 import org.opensearch.alerting.core.model.SearchInput
-import org.opensearch.alerting.settings.SupportedApiSettings
 import org.opensearch.alerting.elasticapi.instant
 import org.opensearch.alerting.elasticapi.optionalTimeField
 import org.opensearch.alerting.elasticapi.optionalUserField
 import org.opensearch.alerting.settings.AlertingSettings.Companion.MONITOR_MAX_INPUTS
 import org.opensearch.alerting.settings.AlertingSettings.Companion.MONITOR_MAX_TRIGGERS
+import org.opensearch.alerting.settings.SupportedApiSettings
 import org.opensearch.alerting.util.IndexUtils.Companion.NO_SCHEMA_VERSION
 import org.opensearch.alerting.util._ID
 import org.opensearch.alerting.util._VERSION
