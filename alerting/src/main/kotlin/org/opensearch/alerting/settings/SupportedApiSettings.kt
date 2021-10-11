@@ -24,7 +24,7 @@
  *   permissions and limitations under the License.
  */
 
-package org.opensearch.alerting.core.settings
+package org.opensearch.alerting.settings
 
 import org.opensearch.action.ActionRequest
 import org.opensearch.action.admin.cluster.health.ClusterHealthRequest

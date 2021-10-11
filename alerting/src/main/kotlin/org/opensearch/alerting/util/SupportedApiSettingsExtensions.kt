@@ -6,8 +6,8 @@ import org.opensearch.action.admin.cluster.health.ClusterHealthResponse
 import org.opensearch.action.admin.cluster.stats.ClusterStatsRequest
 import org.opensearch.action.admin.cluster.stats.ClusterStatsResponse
 import org.opensearch.alerting.core.model.LocalUriInput
-import org.opensearch.alerting.core.settings.SupportedApiSettings
-import org.opensearch.alerting.core.settings.SupportedApiSettings.Companion.resolveToActionRequest
+import org.opensearch.alerting.settings.SupportedApiSettings
+import org.opensearch.alerting.settings.SupportedApiSettings.Companion.resolveToActionRequest
 import org.opensearch.alerting.elasticapi.convertToMap
 import org.opensearch.client.Client
 import org.opensearch.common.xcontent.support.XContentMapValues
