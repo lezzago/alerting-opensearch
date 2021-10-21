@@ -21,6 +21,7 @@ import org.opensearch.commons.notifications.action.DeleteNotificationConfigRespo
 import org.opensearch.commons.notifications.action.GetNotificationConfigResponse
 import org.opensearch.commons.notifications.model.ConfigType
 import org.opensearch.commons.notifications.model.EmailGroup
+import org.opensearch.commons.notifications.model.EmailRecipient
 import org.opensearch.commons.notifications.model.NotificationConfig
 import org.opensearch.commons.notifications.model.NotificationConfigInfo
 import org.opensearch.commons.notifications.model.NotificationConfigSearchResult
@@ -46,7 +47,7 @@ class EmailGroupActionsConverterTests : OpenSearchTestCase() {
     }
 
     fun `test convertGetNotificationConfigResponseToGetEmailGroupResponse`() {
-        val emailGroup = EmailGroup(listOf("test@email.com"))
+        val emailGroup = EmailGroup(listOf(EmailRecipient("test@email.com")))
         val notificationConfig = NotificationConfig(
             "notificationConfig",
             "description",
@@ -103,7 +104,7 @@ class EmailGroupActionsConverterTests : OpenSearchTestCase() {
         assertEquals(indexEmailGroupRequest.emailGroupID, createNotificationConfigRequest.configId)
         val notifEmailGroup = createNotificationConfigRequest.notificationConfig.configData as EmailGroup
         assertEquals(1, notifEmailGroup.recipients.size)
-        assertEquals("test@email.com", notifEmailGroup.recipients[0])
+        assertEquals("test@email.com", notifEmailGroup.recipients[0].recipient)
         assertEquals(emailGroup.name, createNotificationConfigRequest.notificationConfig.name)
         assertEquals(setOf(NotificationConstants.FEATURE_ALERTING), createNotificationConfigRequest.notificationConfig.features)
         assertEquals(ConfigType.EMAIL_GROUP, createNotificationConfigRequest.notificationConfig.configType)
@@ -134,7 +135,7 @@ class EmailGroupActionsConverterTests : OpenSearchTestCase() {
         assertNull(createNotificationConfigRequest.configId)
         val notifEmailGroup = createNotificationConfigRequest.notificationConfig.configData as EmailGroup
         assertEquals(1, notifEmailGroup.recipients.size)
-        assertEquals("test@email.com", notifEmailGroup.recipients[0])
+        assertEquals("test@email.com", notifEmailGroup.recipients[0].recipient)
         assertEquals(emailGroup.name, createNotificationConfigRequest.notificationConfig.name)
         assertEquals(setOf(NotificationConstants.FEATURE_ALERTING), createNotificationConfigRequest.notificationConfig.features)
         assertEquals(ConfigType.EMAIL_GROUP, createNotificationConfigRequest.notificationConfig.configType)
@@ -165,7 +166,7 @@ class EmailGroupActionsConverterTests : OpenSearchTestCase() {
         assertEquals(indexEmailGroupRequest.emailGroupID, updateNotificationConfigRequest.configId)
         val notifEmailGroup = updateNotificationConfigRequest.notificationConfig.configData as EmailGroup
         assertEquals(1, notifEmailGroup.recipients.size)
-        assertEquals("test@email.com", notifEmailGroup.recipients[0])
+        assertEquals("test@email.com", notifEmailGroup.recipients[0].recipient)
         assertEquals(emailGroup.name, updateNotificationConfigRequest.notificationConfig.name)
         assertEquals(setOf(NotificationConstants.FEATURE_ALERTING), updateNotificationConfigRequest.notificationConfig.features)
         assertEquals(ConfigType.EMAIL_GROUP, updateNotificationConfigRequest.notificationConfig.configType)
@@ -173,7 +174,7 @@ class EmailGroupActionsConverterTests : OpenSearchTestCase() {
     }
 
     fun `test convertToIndexEmailGroupResponse`() {
-        val emailGroup = EmailGroup(listOf("test@email.com"))
+        val emailGroup = EmailGroup(listOf(EmailRecipient("test@email.com")))
         val notificationConfig = NotificationConfig(
             "notificationConfig",
             "description",

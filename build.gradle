@@ -29,15 +29,19 @@ buildscript {
 
     ext {
         opensearch_version = System.getProperty("opensearch.version", "1.0.0")
-        common_utils_version = '1.0.0.0'
+        // 1.0.0 -> 1.0.0.0, and 1.0.0-SNAPSHOT -> 1.0.0.0-SNAPSHOT
+        opensearch_build = opensearch_version.replaceAll(/(\.\d)([^\d]*)$/, '$1.0$2')
+        common_utils_version = System.getProperty("common_utils.version", '1.0.0.0-SNAPSHOT')
         kotlin_version = '1.4.32'
     }
 
     repositories {
         mavenLocal()
+        maven { url "https://aws.oss.sonatype.org/content/repositories/snapshots" }
         mavenCentral()
         maven { url "https://plugins.gradle.org/m2/" }
         jcenter()
+        maven { url "https://aws.oss.sonatype.org/content/repositories/snapshots" }
     }
     dependencies {
         classpath "org.opensearch.gradle:build-tools:${opensearch_version}"

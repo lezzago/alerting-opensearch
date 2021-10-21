@@ -67,6 +67,13 @@ data class Destination(
     private val logger = LogManager.getLogger(javaClass)
 
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
+        return createXContentBuilder(builder, params, true)
+    }
+
+    fun toXContentWithUser(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
+        return createXContentBuilder(builder, params, false)
+    }
+    private fun createXContentBuilder(builder: XContentBuilder, params: ToXContent.Params, secure: Boolean): XContentBuilder {
         builder.startObject()
         logger.info("Convert destination toXContent")
         logger.info("converting destination - name: $name, id: $id, type.val: ${type.value}, type: $type")
@@ -74,8 +81,12 @@ data class Destination(
         builder.field(ID_FIELD, id)
             .field(TYPE_FIELD, type.value)
             .field(NAME_FIELD, name)
-            .optionalUserField(USER_FIELD, user)
-            .field(SCHEMA_VERSION, schemaVersion)
+
+        if (!secure) {
+            builder.optionalUserField(USER_FIELD, user)
+        }
+
+        builder.field(SCHEMA_VERSION, schemaVersion)
             .field(SEQ_NO_FIELD, seqNo)
             .field(PRIMARY_TERM_FIELD, primaryTerm)
             .optionalTimeField(LAST_UPDATE_TIME_FIELD, lastUpdateTime)
@@ -83,7 +94,6 @@ data class Destination(
         if (params.paramAsBoolean("with_type", false)) builder.endObject()
         return builder.endObject()
     }
-
     fun toXContent(builder: XContentBuilder): XContentBuilder {
         return toXContent(builder, ToXContent.EMPTY_PARAMS)
     }

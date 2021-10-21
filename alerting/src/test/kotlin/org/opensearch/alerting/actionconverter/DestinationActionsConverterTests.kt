@@ -32,6 +32,7 @@ import org.opensearch.commons.notifications.model.Chime
 import org.opensearch.commons.notifications.model.ConfigType
 import org.opensearch.commons.notifications.model.Email
 import org.opensearch.commons.notifications.model.EmailGroup
+import org.opensearch.commons.notifications.model.EmailRecipient
 import org.opensearch.commons.notifications.model.MethodType
 import org.opensearch.commons.notifications.model.NotificationConfig
 import org.opensearch.commons.notifications.model.NotificationConfigInfo
@@ -232,7 +233,7 @@ class DestinationActionsConverterTests : OpenSearchTestCase() {
     }
 
     fun `test convertGetNotificationConfigResponseToGetDestinationsResponse with email`() {
-        val email = Email("accountId", listOf("test@email.com"), emptyList())
+        val email = Email("accountId", listOf(EmailRecipient("test@email.com")), emptyList())
         val notificationConfig = NotificationConfig(
             "notificationConfig",
             "description",
@@ -282,7 +283,7 @@ class DestinationActionsConverterTests : OpenSearchTestCase() {
     }
 
     fun `test convertGetNotificationConfigResponseToGetDestinationsResponse with email group`() {
-        val emailGroup = EmailGroup(listOf("test@email.com"))
+        val emailGroup = EmailGroup(listOf(EmailRecipient("test@email.com")))
         val notificationConfig = NotificationConfig(
             "notificationConfig",
             "description",
@@ -573,7 +574,7 @@ class DestinationActionsConverterTests : OpenSearchTestCase() {
         assertEquals(setOf(FEATURE_ALERTING), notificationConfig.features)
         val notifEmail = notificationConfig.configData as Email
         assertEquals(email.email?.emailAccountID, notifEmail.emailAccountID)
-        assertEquals(email.email?.recipients?.get(0)?.email, notifEmail.recipients[0])
+        assertEquals(email.email?.recipients?.get(0)?.email, notifEmail.recipients[0].recipient)
     }
 
     fun `test convertIndexDestinationRequestToCreateNotificationConfigRequest with email and email group recipients`() {
@@ -785,7 +786,7 @@ class DestinationActionsConverterTests : OpenSearchTestCase() {
         assertEquals(setOf(FEATURE_ALERTING), notificationConfig.features)
         val notifEmail = notificationConfig.configData as Email
         assertEquals(email.email?.emailAccountID, notifEmail.emailAccountID)
-        assertEquals(email.email?.recipients?.get(0)?.email, notifEmail.recipients[0])
+        assertEquals(email.email?.recipients?.get(0)?.email, notifEmail.recipients[0].recipient)
     }
 
     fun `test convertToIndexDestinationResponse with slack`() {
@@ -853,7 +854,7 @@ class DestinationActionsConverterTests : OpenSearchTestCase() {
     }
 
     fun `test convertToIndexDestinationResponse with email`() {
-        val email = Email("accountId", listOf("test@email.com"), emptyList())
+        val email = Email("accountId", listOf(EmailRecipient("test@email.com")), emptyList())
         val notificationConfig = NotificationConfig(
             "notificationConfig",
             "description",
@@ -871,7 +872,7 @@ class DestinationActionsConverterTests : OpenSearchTestCase() {
         assertEquals(RestStatus.OK, indexDestinationResponse.status)
         assertEquals("configId", indexDestinationResponse.destination.id)
         assertEquals(email.emailAccountID, indexDestinationResponse.destination.email?.emailAccountID)
-        assertEquals(email.recipients[0], indexDestinationResponse.destination.email?.recipients?.get(0)?.email)
+        assertEquals(email.recipients[0].recipient, indexDestinationResponse.destination.email?.recipients?.get(0)?.email)
     }
 
     fun `test convertDeleteDestinationRequestToDeleteNotificationConfigRequest`() {
@@ -904,7 +905,7 @@ class DestinationActionsConverterTests : OpenSearchTestCase() {
     }
 
     fun `test convertNotificationConfigToDestination convert invalid destination using email group`() {
-        val emailGroup = EmailGroup(listOf("test@email.com"))
+        val emailGroup = EmailGroup(listOf(EmailRecipient("test@email.com")))
         val notificationConfig = NotificationConfig(
             "notificationConfig",
             "description",

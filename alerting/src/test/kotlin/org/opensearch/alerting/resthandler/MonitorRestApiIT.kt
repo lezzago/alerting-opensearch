@@ -56,6 +56,7 @@ import org.opensearch.alerting.randomQueryLevelTrigger
 import org.opensearch.alerting.randomThrottle
 import org.opensearch.alerting.randomUser
 import org.opensearch.alerting.settings.AlertingSettings
+import org.opensearch.alerting.toJsonString
 import org.opensearch.alerting.util.DestinationType
 import org.opensearch.client.ResponseException
 import org.opensearch.client.WarningFailureException
@@ -99,7 +100,7 @@ class MonitorRestApiIT : AlertingRestTestCase() {
     fun `test parsing monitor as a scheduled job`() {
         val monitor = createRandomMonitor()
 
-        val builder = monitor.toXContent(XContentBuilder.builder(XContentType.JSON.xContent()), USE_TYPED_KEYS)
+        val builder = monitor.toXContentWithUser(XContentBuilder.builder(XContentType.JSON.xContent()), USE_TYPED_KEYS)
         val string = BytesReference.bytes(builder).utf8ToString()
         val xcp = createParser(XContentType.JSON.xContent(), string)
         val scheduledJob = ScheduledJob.parse(xcp, monitor.id, monitor.version)
@@ -569,6 +570,78 @@ class MonitorRestApiIT : AlertingRestTestCase() {
         assertFalse("Alert in state ${activeAlert.state} found in failed list", failedResponseList.contains(activeAlert.id))
     }
 
+    fun `test acknowledging more than 10 alerts at once`() {
+        // GIVEN
+        putAlertMappings() // Required as we do not have a create alert API.
+        val monitor = createRandomMonitor(refresh = true)
+        val alertsToAcknowledge = (1..15).map { createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)) }.toTypedArray()
+
+        // WHEN
+        val response = acknowledgeAlerts(monitor, *alertsToAcknowledge)
+
+        // THEN
+        val responseMap = response.asMap()
+        val expectedAcknowledgedCount = alertsToAcknowledge.size
+
+        val acknowledgedAlerts = responseMap["success"] as List<String>
+        assertTrue("Expected $expectedAcknowledgedCount alerts to be acknowledged successfully.", acknowledgedAlerts.size == expectedAcknowledgedCount)
+
+        val acknowledgedAlertsList = acknowledgedAlerts.toString()
+        alertsToAcknowledge.forEach { alert -> assertTrue("Alert with ID ${alert.id} not found in failed list.", acknowledgedAlertsList.contains(alert.id)) }
+
+        val failedResponse = responseMap["failed"] as List<String>
+        assertTrue("Expected 0 alerts to fail acknowledgment.", failedResponse.isEmpty())
+    }
+
+    fun `test acknowledging more than 10 alerts at once, including acknowledged alerts`() {
+        // GIVEN
+        putAlertMappings() // Required as we do not have a create alert API.
+        val monitor = createRandomMonitor(refresh = true)
+        val alertsGroup1 = (1..15).map { createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)) }.toTypedArray()
+        acknowledgeAlerts(monitor, *alertsGroup1) // Acknowledging the first array of alerts.
+
+        val alertsGroup2 = (1..15).map { createAlert(randomAlert(monitor).copy(state = Alert.State.ACTIVE)) }.toTypedArray()
+
+        val alertsToAcknowledge = arrayOf(*alertsGroup1, *alertsGroup2) // Creating an array of alerts that includes alerts that have been already acknowledged, and new alerts.
+
+        // WHEN
+        val response = acknowledgeAlerts(monitor, *alertsToAcknowledge)
+
+        // THEN
+        val responseMap = response.asMap()
+        val expectedAcknowledgedCount = alertsToAcknowledge.size - alertsGroup1.size
+
+        val acknowledgedAlerts = responseMap["success"] as List<String>
+        assertTrue("Expected $expectedAcknowledgedCount alerts to be acknowledged successfully.", acknowledgedAlerts.size == expectedAcknowledgedCount)
+
+        val acknowledgedAlertsList = acknowledgedAlerts.toString()
+        alertsGroup2.forEach { alert -> assertTrue("Alert with ID ${alert.id} not found in failed list.", acknowledgedAlertsList.contains(alert.id)) }
+        alertsGroup1.forEach { alert -> assertFalse("Alert with ID ${alert.id} found in failed list.", acknowledgedAlertsList.contains(alert.id)) }
+
+        val failedResponse = responseMap["failed"] as List<String>
+        assertTrue("Expected ${alertsGroup1.size} alerts to fail acknowledgment.", failedResponse.size == alertsGroup1.size)
+
+        val failedResponseList = failedResponse.toString()
+        alertsGroup1.forEach { alert -> assertTrue("Alert with ID ${alert.id} not found in failed list.", failedResponseList.contains(alert.id)) }
+        alertsGroup2.forEach { alert -> assertFalse("Alert with ID ${alert.id} found in failed list.", failedResponseList.contains(alert.id)) }
+    }
+
+    @Throws(Exception::class)
+    fun `test acknowledging 0 alerts`() {
+        // GIVEN
+        putAlertMappings() // Required as we do not have a create alert API.
+        val monitor = createRandomMonitor(refresh = true)
+        val alertsToAcknowledge = arrayOf<Alert>()
+
+        // WHEN & THEN
+        try {
+            acknowledgeAlerts(monitor, *alertsToAcknowledge)
+            fail("Expected acknowledgeAlerts to throw an exception.")
+        } catch (e: ResponseException) {
+            assertEquals("Unexpected status", RestStatus.BAD_REQUEST, e.response.restStatus())
+        }
+    }
+
     fun `test get all alerts in all states`() {
         putAlertMappings() // Required as we do not have a create alert API.
         val monitor = createRandomMonitor(refresh = true)
@@ -722,7 +795,11 @@ class MonitorRestApiIT : AlertingRestTestCase() {
 
         val historyAlerts = searchAlerts(monitor, AlertIndices.HISTORY_WRITE_INDEX)
         assertEquals("Alert was not moved to history", 1, historyAlerts.size)
-        assertEquals("Alert data incorrect", alert.copy(state = Alert.State.DELETED), historyAlerts.single())
+        assertEquals(
+            "Alert data incorrect",
+            alert.copy(state = Alert.State.DELETED).toJsonString(),
+            historyAlerts.single().toJsonString()
+        )
     }
 
     fun `test delete trigger moves alerts`() {
@@ -747,7 +824,11 @@ class MonitorRestApiIT : AlertingRestTestCase() {
 
         val historyAlerts = searchAlerts(monitor, AlertIndices.HISTORY_WRITE_INDEX)
         assertEquals("Alert was not moved to history", 1, historyAlerts.size)
-        assertEquals("Alert data incorrect", alert.copy(state = Alert.State.DELETED), historyAlerts.single())
+        assertEquals(
+            "Alert data incorrect",
+            alert.copy(state = Alert.State.DELETED).toJsonString(),
+            historyAlerts.single().toJsonString()
+        )
     }
 
     fun `test delete trigger moves alerts only for deleted trigger`() {
@@ -772,12 +853,16 @@ class MonitorRestApiIT : AlertingRestTestCase() {
         val alerts = searchAlerts(monitor)
         // We have two alerts from above, 1 for each trigger, there should be only 1 left in active index
         assertEquals("One alert should be in active index", 1, alerts.size)
-        assertEquals("Wrong alert in active index", alertKeep, alerts.single())
+        assertEquals("Wrong alert in active index", alertKeep.toJsonString(), alerts.single().toJsonString())
 
         val historyAlerts = searchAlerts(monitor, AlertIndices.HISTORY_WRITE_INDEX)
         // Only alertDelete should of been moved to history index
         assertEquals("One alert should be in history index", 1, historyAlerts.size)
-        assertEquals("Alert data incorrect", alertDelete.copy(state = Alert.State.DELETED), historyAlerts.single())
+        assertEquals(
+            "Alert data incorrect",
+            alertDelete.copy(state = Alert.State.DELETED).toJsonString(),
+            historyAlerts.single().toJsonString()
+        )
     }
 
     fun `test update monitor with wrong version`() {
@@ -941,5 +1026,23 @@ class MonitorRestApiIT : AlertingRestTestCase() {
         val hit = searchHits[0] as Map<String, Any>
         val monitorHit = hit["_source"] as Map<String, Any>
         assertEquals("Type is not monitor", monitorHit[Monitor.TYPE_FIELD], "monitor")
+    }
+
+    @Throws(Exception::class)
+    fun `test search monitor with alerting indices only`() {
+        // 1. search - must return error as invalid index is passed
+        val search = SearchSourceBuilder().query(QueryBuilders.matchAllQuery()).toString()
+        val params: MutableMap<String, String> = HashMap()
+        params["index"] = "data-logs"
+        try {
+            client().makeRequest(
+                "GET",
+                "$ALERTING_BASE_URI/_search",
+                params,
+                NStringEntity(search, ContentType.APPLICATION_JSON)
+            )
+        } catch (e: ResponseException) {
+            assertEquals("Unexpected status", RestStatus.BAD_REQUEST, e.response.restStatus())
+        }
     }
 }

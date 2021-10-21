@@ -50,6 +50,7 @@ import org.opensearch.commons.notifications.action.GetNotificationConfigResponse
 import org.opensearch.commons.notifications.action.UpdateNotificationConfigRequest
 import org.opensearch.commons.notifications.model.ConfigType
 import org.opensearch.commons.notifications.model.EmailGroup
+import org.opensearch.commons.notifications.model.EmailRecipient
 import org.opensearch.commons.notifications.model.NotificationConfig
 import org.opensearch.commons.notifications.model.NotificationConfigInfo
 import org.opensearch.index.Index
@@ -76,7 +77,7 @@ class EmailGroupActionsConverter {
             val emailGroup: EmailGroup = notificationConfig.configData as EmailGroup
             val recipients = mutableListOf<EmailEntry>()
             emailGroup.recipients.forEach {
-                recipients.add(EmailEntry(it))
+                recipients.add(EmailEntry(it.recipient))
             }
             val alertEmailGroup = org.opensearch.alerting.model.destination.email.EmailGroup(
                 notificationConfigInfo.configId,
@@ -93,9 +94,9 @@ class EmailGroupActionsConverter {
             request: IndexEmailGroupRequest
         ): CreateNotificationConfigRequest {
             val emailGroup = request.emailGroup
-            val recipients = mutableListOf<String>()
+            val recipients = mutableListOf<EmailRecipient>()
             emailGroup.emails.forEach {
-                recipients.add(it.email)
+                recipients.add(EmailRecipient(it.email))
             }
             val notificationEmailGroup = EmailGroup(recipients)
 
@@ -188,9 +189,9 @@ class EmailGroupActionsConverter {
         fun convertEmailGroupToNotificationConfig(
             emailGroup: org.opensearch.alerting.model.destination.email.EmailGroup
         ): NotificationConfig {
-            val recipients = mutableListOf<String>()
+            val recipients = mutableListOf<EmailRecipient>()
             emailGroup.emails.forEach {
-                recipients.add(it.email)
+                recipients.add(EmailRecipient(it.email))
             }
             val notificationEmailGroup = EmailGroup(recipients)
 
@@ -210,7 +211,7 @@ class EmailGroupActionsConverter {
             val emailGroup: EmailGroup = notificationConfig.configData as EmailGroup
             val recipients = mutableListOf<EmailEntry>()
             emailGroup.recipients.forEach {
-                recipients.add(EmailEntry(it))
+                recipients.add(EmailEntry(it.recipient))
             }
             return org.opensearch.alerting.model.destination.email.EmailGroup(
                 notificationConfigInfo.configId,

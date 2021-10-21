@@ -54,6 +54,7 @@ import org.opensearch.commons.notifications.action.UpdateNotificationConfigReque
 import org.opensearch.commons.notifications.model.Chime
 import org.opensearch.commons.notifications.model.ConfigType
 import org.opensearch.commons.notifications.model.Email
+import org.opensearch.commons.notifications.model.EmailRecipient
 import org.opensearch.commons.notifications.model.HttpMethodType
 import org.opensearch.commons.notifications.model.NotificationConfig
 import org.opensearch.commons.notifications.model.NotificationConfigInfo
@@ -254,7 +255,7 @@ class DestinationActionsConverter {
                     val email: Email = notificationConfig.configData as Email
                     val recipients = mutableListOf<Recipient>()
                     email.recipients.forEach {
-                        val recipient = Recipient(Recipient.RecipientType.EMAIL, null, it)
+                        val recipient = Recipient(Recipient.RecipientType.EMAIL, null, it.recipient)
                         recipients.add(recipient)
                     }
                     email.emailGroupIds.forEach {
@@ -348,13 +349,14 @@ class DestinationActionsConverter {
                 }
                 DestinationType.EMAIL -> {
                     val alertEmail = destination.email ?: return null
-                    val recipients = mutableListOf<String>()
+                    val recipients = mutableListOf<EmailRecipient>()
                     val emailGroupIds = mutableListOf<String>()
                     alertEmail.recipients.forEach {
                         if (it.type == Recipient.RecipientType.EMAIL_GROUP)
                             it.emailGroupID?.let { emailGroup -> emailGroupIds.add(emailGroup) }
-                        else it.email?.let { emailRecipient -> recipients.add(emailRecipient) }
+                        else it.email?.let { emailRecipient -> recipients.add(EmailRecipient(emailRecipient)) }
                     }
+
                     val email = Email(alertEmail.emailAccountID, recipients, emailGroupIds)
                     val description = "Email destination created from the Alerting plugin"
                     return NotificationConfig(
