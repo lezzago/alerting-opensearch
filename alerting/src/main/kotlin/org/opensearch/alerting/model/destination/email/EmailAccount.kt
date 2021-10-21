@@ -57,13 +57,6 @@ data class EmailAccount(
 ) : Writeable, ToXContent {
 
     init {
-        // Excluding dashes (-) from valid names for EmailAccount since the name is used
-        // to namespace the associated OpenSearch keystore settings and dashes do not work for those settings.
-        val validNamePattern = Regex("[A-Z0-9_]+", RegexOption.IGNORE_CASE)
-        require(validNamePattern.matches(name)) {
-            "Invalid email account name. Valid characters are upper and lowercase a-z, 0-9, and _ (underscore)."
-        }
-
         require(isValidEmail(email)) { "Invalid email" }
     }
 

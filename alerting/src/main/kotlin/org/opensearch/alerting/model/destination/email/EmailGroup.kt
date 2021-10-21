@@ -50,13 +50,6 @@ data class EmailGroup(
     val emails: List<EmailEntry>
 ) : Writeable, ToXContent {
 
-    init {
-        val validNamePattern = Regex("[A-Z0-9_-]+", RegexOption.IGNORE_CASE)
-        require(validNamePattern.matches(name)) {
-            "Invalid email group name. Valid characters are upper and lowercase a-z, 0-9, _ (underscore) and - (hyphen)."
-        }
-    }
-
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
         builder.startObject()
         if (params.paramAsBoolean("with_type", false)) builder.startObject(EMAIL_GROUP_TYPE)

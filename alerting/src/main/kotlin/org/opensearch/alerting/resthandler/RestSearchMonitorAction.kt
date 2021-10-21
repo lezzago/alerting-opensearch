@@ -107,6 +107,7 @@ class RestSearchMonitorAction(
     override fun prepareRequest(request: RestRequest, client: NodeClient): RestChannelConsumer {
         log.debug("${request.method()} ${AlertingPlugin.MONITOR_BASE_URI}/_search")
 
+        //TODO need to force only use config index
         val index = request.param("index", SCHEDULED_JOBS_INDEX)
         val searchSourceBuilder = SearchSourceBuilder()
         searchSourceBuilder.parseXContent(request.contentOrSourceParamParser())

@@ -48,22 +48,6 @@ class EmailAccountTests : OpenSearchTestCase() {
         assertEquals("Email account method was changed", emailAccount.method, EmailAccount.MethodType.NONE)
     }
 
-    fun `test email account with invalid name`() {
-        try {
-            EmailAccount(
-                name = "invalid-name",
-                email = "test@email.com",
-                host = "smtp.com",
-                port = 25,
-                method = EmailAccount.MethodType.NONE,
-                username = null,
-                password = null
-            )
-            fail("Creating an email account with an invalid name did not fail.")
-        } catch (ignored: IllegalArgumentException) {
-        }
-    }
-
     fun `test email account with invalid email`() {
         try {
             EmailAccount(

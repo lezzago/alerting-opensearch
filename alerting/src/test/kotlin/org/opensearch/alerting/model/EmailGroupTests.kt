@@ -57,17 +57,6 @@ class EmailGroupTests : OpenSearchTestCase() {
         )
     }
 
-    fun `test email group with invalid name fails`() {
-        try {
-            EmailGroup(
-                name = "invalid name",
-                emails = listOf(EmailEntry("test@email.com"))
-            )
-            fail("Creating an email group with an invalid name did not fail.")
-        } catch (ignored: IllegalArgumentException) {
-        }
-    }
-
     fun `test email group with invalid email fails`() {
         try {
             EmailGroup(
