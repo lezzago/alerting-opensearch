@@ -164,3 +164,31 @@ fun BucketLevelTriggerRunResult.getCombinedTriggerRunResult(
 
     return this.copy(aggregationResultBuckets = mergedAggregationResultBuckets, actionResultsMap = mergedActionResultsMap, error = error)
 }
+
+fun updateKeyValueFromOtherMap(source: MutableMap<String, Any>, mods: Map<String, String>) {
+    val entries = source.entries
+    for (entry in entries) {
+        if (mods.containsKey(entry.key)) {
+            source[mods[entry.key]!!] = source[entry.key]!!
+            source.remove(entry.key)
+        }
+
+        if (entry.value is String && mods.containsKey(entry.value as String))
+            source[entry.key] = mods[entry.value as String]!!
+
+        if (entry.value is Map<*, *>)
+            updateKeyValueFromOtherMap(entry.value as MutableMap<String, Any>, mods)
+
+        if (entry.value is List<*>) {
+            for (element in entry.value as List<*>) {
+                if (element is Map<*, *>)
+                    updateKeyValueFromOtherMap(element as MutableMap<String, Any>, mods)
+                if (element is String && mods.containsKey(element as String)) {
+                    // Figure out how to do this cleanly
+                    (entry.value as List<*>).plus(mods[element])
+                    continue
+                }
+            }
+        }
+    }
+}
