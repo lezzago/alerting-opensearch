@@ -25,7 +25,6 @@ fun executeTransportAction(localUriInput: LocalUriInput, client: Client): Action
         is ClusterHealthRequest -> client.admin().cluster().health(request).get()
         is ClusterStatsRequest -> client.admin().cluster().clusterStats(request).get()
         is NodesHotThreadsRequest -> client.admin().cluster().nodesHotThreads(request).get()
-        }
         else -> throw IllegalArgumentException("Unsupported API request: ${request.javaClass.name}")
     }
 }
