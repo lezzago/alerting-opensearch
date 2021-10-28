@@ -48,8 +48,8 @@ fun ActionResponse.toMap(): Map<String, Any> {
         is NodesHotThreadsResponse -> {
             logger.info(this.nodesMap)
             redactFieldsFromResponse(
-                    this.nodesMap,
-                    SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.NODES_HOT_THREADS_PATH)
+                this.nodesMap,
+                SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.NODES_HOT_THREADS_PATH)
             )
         }
 
