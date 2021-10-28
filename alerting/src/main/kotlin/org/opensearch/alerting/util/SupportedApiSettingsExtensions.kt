@@ -41,10 +41,13 @@ fun ActionResponse.toMap(): Map<String, Any> {
             this.convertToMap(),
             SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.CLUSTER_HEALTH_PATH)
         )
-        is ClusterStatsResponse -> redactFieldsFromResponse(
-            this.convertToMap(),
-            SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.CLUSTER_STATS_PATH)
-        )
+        is ClusterStatsResponse -> {
+            logger.info(this.convertToMap())
+            redactFieldsFromResponse(
+                    this.convertToMap(),
+                    SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.CLUSTER_STATS_PATH)
+            )
+        }
         is NodesHotThreadsResponse -> {
             logger.info(this.nodesMap)
             redactFieldsFromResponse(
