@@ -6,7 +6,7 @@ import org.opensearch.action.admin.cluster.health.ClusterHealthResponse
 import org.opensearch.action.admin.cluster.node.hotthreads.NodesHotThreadsRequest
 import org.opensearch.action.admin.cluster.node.hotthreads.NodesHotThreadsResponse
 import org.opensearch.action.admin.cluster.stats.ClusterStatsRequest
-import org.opensearch.action.admin.cluster.stats.ClusterStat
+import org.opensearch.action.admin.cluster.stats.ClusterStatsResponse
 import org.opensearch.alerting.core.model.LocalUriInput
 import org.opensearch.alerting.elasticapi.convertToMap
 import org.opensearch.alerting.settings.SupportedApiSettings
