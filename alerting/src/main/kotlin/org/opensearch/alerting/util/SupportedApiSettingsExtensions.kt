@@ -1,5 +1,6 @@
 package org.opensearch.alerting.util
 
+import org.apache.logging.log4j.LogManager
 import org.opensearch.action.ActionResponse
 import org.opensearch.action.admin.cluster.health.ClusterHealthRequest
 import org.opensearch.action.admin.cluster.health.ClusterHealthResponse
@@ -34,6 +35,7 @@ fun executeTransportAction(localUriInput: LocalUriInput, client: Client): Action
  * @throws IllegalArgumentException when the [ActionResponse] is not supported by this feature.
  */
 fun ActionResponse.toMap(): Map<String, Any> {
+    val logger = LogManager.getLogger(javaClass)
     return when (this) {
         is ClusterHealthResponse -> redactFieldsFromResponse(
             this.convertToMap(),
@@ -43,10 +45,13 @@ fun ActionResponse.toMap(): Map<String, Any> {
             this.convertToMap(),
             SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.CLUSTER_STATS_PATH)
         )
-        is NodesHotThreadsResponse -> redactFieldsFromResponse(
-            this.nodesMap,
-            SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.NODES_HOT_THREADS_PATH)
-        )
+        is NodesHotThreadsResponse -> {
+            logger.info(this.nodesMap)
+            redactFieldsFromResponse(
+                    this.nodesMap,
+                    SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.NODES_HOT_THREADS_PATH)
+            )
+        }
 
         else -> throw IllegalArgumentException("Unsupported ActionResponse type: ${this.javaClass.name}")
     }
