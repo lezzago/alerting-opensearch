@@ -53,7 +53,8 @@ fun ActionResponse.toMap(): Map<String, Any> {
                 redactFieldsFromResponse(
                     this.nodesMap,
                     SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.NODES_HOT_THREADS_PATH)
-            ))
+                )
+            )
             redactFieldsFromResponse(
                 this.nodesMap,
                 SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.NODES_HOT_THREADS_PATH)
