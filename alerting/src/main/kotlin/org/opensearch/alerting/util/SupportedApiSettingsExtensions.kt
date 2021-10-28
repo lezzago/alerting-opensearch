@@ -5,6 +5,8 @@ import org.opensearch.action.admin.cluster.health.ClusterHealthRequest
 import org.opensearch.action.admin.cluster.health.ClusterHealthResponse
 import org.opensearch.action.admin.cluster.stats.ClusterStatsRequest
 import org.opensearch.action.admin.cluster.stats.ClusterStatsResponse
+import org.opensearch.action.admin.cluster.node.hotthreads.NodesHotThreadsRequest
+import org.opensearch.action.admin.cluster.node.hotthreads.NodesHotThreadsResponse
 import org.opensearch.alerting.core.model.LocalUriInput
 import org.opensearch.alerting.elasticapi.convertToMap
 import org.opensearch.alerting.settings.SupportedApiSettings
@@ -22,6 +24,8 @@ fun executeTransportAction(localUriInput: LocalUriInput, client: Client): Action
     return when (val request = resolveToActionRequest(localUriInput)) {
         is ClusterHealthRequest -> client.admin().cluster().health(request).get()
         is ClusterStatsRequest -> client.admin().cluster().clusterStats(request).get()
+        is NodesHotThreadsRequest -> client.admin().cluster().nodesHotThreads(request).get()
+        }
         else -> throw IllegalArgumentException("Unsupported API request: ${request.javaClass.name}")
     }
 }
@@ -40,6 +44,11 @@ fun ActionResponse.toMap(): Map<String, Any> {
             this.convertToMap(),
             SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.CLUSTER_STATS_PATH)
         )
+        is NodesHotThreadsResponse -> redactFieldsFromResponse(
+            this.getNodesMap(),
+            SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.NODES_HOT_THREADS_PATH)
+        )
+
         else -> throw IllegalArgumentException("Unsupported ActionResponse type: ${this.javaClass.name}")
     }
 }

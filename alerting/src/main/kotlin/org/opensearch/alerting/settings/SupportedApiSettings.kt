@@ -28,6 +28,7 @@ package org.opensearch.alerting.settings
 
 import org.opensearch.action.ActionRequest
 import org.opensearch.action.admin.cluster.health.ClusterHealthRequest
+import org.opensearch.action.admin.cluster.node.hotthreads.NodesHotThreadsRequest
 import org.opensearch.action.admin.cluster.stats.ClusterStatsRequest
 import org.opensearch.alerting.core.model.LocalUriInput
 import org.opensearch.common.xcontent.XContentHelper
@@ -40,6 +41,8 @@ class SupportedApiSettings {
     companion object {
         const val CLUSTER_HEALTH_PATH = "/_cluster/health"
         const val CLUSTER_STATS_PATH = "/_cluster/stats"
+        const val NODES_HOT_THREADS_PATH = "/_nodes/hot_threads"
+        // TODO: check for the format of  /_nodes/<node_id>/hot_threads
 
         private const val RESOURCE_FILE = "supported_json_payloads.json"
 
@@ -101,6 +104,7 @@ class SupportedApiSettings {
             return when (val path = localUriInput.toConstructedUri().path) {
                 CLUSTER_HEALTH_PATH -> ClusterHealthRequest()
                 CLUSTER_STATS_PATH -> ClusterStatsRequest()
+                NODES_HOT_THREADS_PATH -> NodesHotThreadsRequest()
                 else -> throw IllegalArgumentException("Unsupported API: $path")
             }
         }
