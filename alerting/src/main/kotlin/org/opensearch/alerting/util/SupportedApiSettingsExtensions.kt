@@ -45,7 +45,7 @@ fun ActionResponse.toMap(): Map<String, Any> {
             SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.CLUSTER_STATS_PATH)
         )
         is NodesHotThreadsResponse -> redactFieldsFromResponse(
-            this.getNodesMap(),
+            this.nodesMap,
             SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.NODES_HOT_THREADS_PATH)
         )
 
