@@ -27,7 +27,6 @@
 package org.opensearch.alerting.model
 
 import org.apache.logging.log4j.LogManager
-import org.opensearch.alerting.InputService
 import org.opensearch.alerting.core.model.CronSchedule
 import org.opensearch.alerting.core.model.Input
 import org.opensearch.alerting.core.model.LocalUriInput
