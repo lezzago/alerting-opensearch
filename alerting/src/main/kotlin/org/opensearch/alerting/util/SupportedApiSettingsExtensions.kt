@@ -35,32 +35,19 @@ fun executeTransportAction(localUriInput: LocalUriInput, client: Client): Action
  * @throws IllegalArgumentException when the [ActionResponse] is not supported by this feature.
  */
 fun ActionResponse.toMap(): Map<String, Any> {
-    val logger = LogManager.getLogger(javaClass)
     return when (this) {
         is ClusterHealthResponse -> redactFieldsFromResponse(
             this.convertToMap(),
             SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.CLUSTER_HEALTH_PATH)
         )
-        is ClusterStatsResponse -> {
-            logger.info(this.convertToMap())
-            redactFieldsFromResponse(
-                this.convertToMap(),
-                SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.CLUSTER_STATS_PATH)
-            )
-        }
-        is NodesHotThreadsResponse -> {
-            logger.info(
-                redactFieldsFromResponse(
-                    this.nodesMap,
-                    SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.NODES_HOT_THREADS_PATH)
-                )
-            )
-            redactFieldsFromResponse(
-                this.nodesMap,
-                SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.NODES_HOT_THREADS_PATH)
-            )
-        }
-
+        is ClusterStatsResponse -> redactFieldsFromResponse(
+            this.convertToMap(),
+            SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.CLUSTER_STATS_PATH)
+        )
+        is NodesHotThreadsResponse -> redactFieldsFromResponse(
+            this.nodesMap,
+            SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.NODES_HOT_THREADS_PATH)
+        )
         else -> throw IllegalArgumentException("Unsupported ActionResponse type: ${this.javaClass.name}")
     }
 }
@@ -73,8 +60,6 @@ fun redactFieldsFromResponse(
     mappedActionResponse: Map<String, Any>,
     supportedJsonPayload: Map<String, ArrayList<String>>
 ): Map<String, Any> {
-    val logger = LogManager.getLogger()
-    logger.info("Entering redact")
     return when {
         supportedJsonPayload.isEmpty() -> mappedActionResponse
         else -> {
