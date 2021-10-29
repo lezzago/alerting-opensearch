@@ -34,7 +34,6 @@ fun executeTransportAction(localUriInput: LocalUriInput, client: Client): Action
  * @throws IllegalArgumentException when the [ActionResponse] is not supported by this feature.
  */
 fun ActionResponse.toMap(): Map<String, Any> {
-    private val logger = LogManager.getLogger(javaClass)
     return when (this) {
         is ClusterHealthResponse -> redactFieldsFromResponse(
             this.convertToMap(),
