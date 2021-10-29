@@ -72,6 +72,7 @@ class TransportExecuteMonitorAction @Inject constructor(
                         val monitorRunResult = if (monitor.isBucketLevelMonitor()) {
                             runner.runBucketLevelMonitor(monitor, periodStart, periodEnd, execMonitorRequest.dryrun)
                         } else {
+                            log.debug("Run as query monitor")
                             runner.runQueryLevelMonitor(monitor, periodStart, periodEnd, execMonitorRequest.dryrun)
                         }
                         withContext(Dispatchers.IO) {
