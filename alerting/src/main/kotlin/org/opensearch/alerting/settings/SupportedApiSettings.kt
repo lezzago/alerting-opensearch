@@ -41,7 +41,7 @@ class SupportedApiSettings {
     companion object {
         const val CLUSTER_HEALTH_PATH = "/_cluster/health"
         const val CLUSTER_STATS_PATH = "/_cluster/stats"
-        const val NODES_STATS_PATH "/_nodes/stats"
+        const val NODES_STATS_PATH = "/_nodes/stats"
 
         private const val RESOURCE_FILE = "supported_json_payloads.json"
 
