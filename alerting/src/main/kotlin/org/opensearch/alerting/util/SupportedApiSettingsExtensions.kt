@@ -1,6 +1,5 @@
 package org.opensearch.alerting.util
 
-import org.apache.logging.log4j.LogManager
 import org.opensearch.action.ActionResponse
 import org.opensearch.action.admin.cluster.health.ClusterHealthRequest
 import org.opensearch.action.admin.cluster.health.ClusterHealthResponse
