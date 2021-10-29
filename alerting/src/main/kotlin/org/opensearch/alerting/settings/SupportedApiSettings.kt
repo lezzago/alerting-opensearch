@@ -42,7 +42,6 @@ class SupportedApiSettings {
         const val CLUSTER_HEALTH_PATH = "/_cluster/health"
         const val CLUSTER_STATS_PATH = "/_cluster/stats"
         const val NODES_STATS_PATH "/_nodes/stats"
-        // TODO: check for the format of  /_nodes/<node_id>/hot_threads
 
         private const val RESOURCE_FILE = "supported_json_payloads.json"
 
