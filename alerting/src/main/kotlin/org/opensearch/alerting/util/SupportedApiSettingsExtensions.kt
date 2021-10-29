@@ -3,6 +3,8 @@ package org.opensearch.alerting.util
 import org.opensearch.action.ActionResponse
 import org.opensearch.action.admin.cluster.health.ClusterHealthRequest
 import org.opensearch.action.admin.cluster.health.ClusterHealthResponse
+import org.opensearch.action.admin.cluster.node.stats.NodesStatsRequest
+import org.opensearch.action.admin.cluster.node.stats.NodesStatsResponse
 import org.opensearch.action.admin.cluster.stats.ClusterStatsRequest
 import org.opensearch.action.admin.cluster.stats.ClusterStatsResponse
 import org.opensearch.alerting.core.model.LocalUriInput
@@ -22,6 +24,7 @@ fun executeTransportAction(localUriInput: LocalUriInput, client: Client): Action
     return when (val request = resolveToActionRequest(localUriInput)) {
         is ClusterHealthRequest -> client.admin().cluster().health(request).get()
         is ClusterStatsRequest -> client.admin().cluster().clusterStats(request).get()
+        is NodesStatsRequest -> client.admin().cluster().nodesStats(request).get()
         else -> throw IllegalArgumentException("Unsupported API request: ${request.javaClass.name}")
     }
 }
@@ -39,6 +42,10 @@ fun ActionResponse.toMap(): Map<String, Any> {
         is ClusterStatsResponse -> redactFieldsFromResponse(
             this.convertToMap(),
             SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.CLUSTER_STATS_PATH)
+        )
+        is NodesStatsResponse -> redactFieldsFromResponse(
+            this.convertToMap(),
+            SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.NODES_STATS_PATH)
         )
         else -> throw IllegalArgumentException("Unsupported ActionResponse type: ${this.javaClass.name}")
     }
