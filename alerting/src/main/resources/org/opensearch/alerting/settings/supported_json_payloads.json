@@ -1,5 +1,6 @@
 {
   "/_cluster/health": {},
   "/_cluster/stats": {},
+  "/_cluster/settings": {},
   "/_nodes/stats": {}
 }
