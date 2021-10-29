@@ -1,5 +1,4 @@
 {
   "/_cluster/health": {},
-  "/_cluster/stats": {},
-  "/_nodes/stats": {}
+  "/_cluster/stats": {}
 }
