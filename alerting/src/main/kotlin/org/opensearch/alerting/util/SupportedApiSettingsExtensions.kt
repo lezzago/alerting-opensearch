@@ -14,7 +14,7 @@ import org.opensearch.alerting.elasticapi.convertToMap
 import org.opensearch.alerting.settings.SupportedApiSettings
 import org.opensearch.alerting.settings.SupportedApiSettings.Companion.resolveToActionRequest
 import org.opensearch.client.Client
-import org.opensearch.common.settings.Setting
+import org.opensearch.common.settings.Settings
 import org.opensearch.common.xcontent.support.XContentMapValues
 
 /**
