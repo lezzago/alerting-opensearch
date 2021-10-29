@@ -14,6 +14,7 @@ import org.opensearch.alerting.elasticapi.convertToMap
 import org.opensearch.alerting.settings.SupportedApiSettings
 import org.opensearch.alerting.settings.SupportedApiSettings.Companion.resolveToActionRequest
 import org.opensearch.client.Client
+import org.opensearch.common.settings.Setting
 import org.opensearch.common.xcontent.support.XContentMapValues
 
 /**
@@ -27,7 +28,7 @@ fun executeTransportAction(localUriInput: LocalUriInput, client: Client): Action
         is ClusterHealthRequest -> client.admin().cluster().health(request).get()
         is ClusterStatsRequest -> client.admin().cluster().clusterStats(request).get()
         is ClusterStateRequest -> {
-            val metadata = client.admin().cluster().clusterState(request).get().state.metadata
+            val metadata = client.admin().cluster().state(request).get().state.metadata
             return ClusterGetSettingsResponse(metadata.persistentSettings(), metadata.transientSettings(), Settings.EMPTY)
         }
         is NodesStatsRequest -> client.admin().cluster().nodesStats(request).get()
@@ -49,7 +50,7 @@ fun ActionResponse.toMap(): Map<String, Any> {
             this.convertToMap(),
             SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.CLUSTER_STATS_PATH)
         )
-        is ClusterSettingsResponse -> redactFieldsFromResponse(
+        is ClusterGetSettingsResponse -> redactFieldsFromResponse(
             this.convertToMap(),
             SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.CLUSTER_SETTINGS_PATH)
         )
