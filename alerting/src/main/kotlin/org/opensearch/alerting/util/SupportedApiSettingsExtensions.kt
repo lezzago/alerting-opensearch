@@ -43,10 +43,7 @@ fun ActionResponse.toMap(): Map<String, Any> {
             this.convertToMap(),
             SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.CLUSTER_STATS_PATH)
         )
-        is NodesHotThreadsResponse -> redactFieldsFromResponse(
-            this.nodesMap,
-            SupportedApiSettings.getSupportedJsonPayload(SupportedApiSettings.NODES_HOT_THREADS_PATH)
-        )
+        is NodesHotThreadsResponse -> this.nodesMap
         else -> throw IllegalArgumentException("Unsupported ActionResponse type: ${this.javaClass.name}")
     }
 }
