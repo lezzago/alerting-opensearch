@@ -26,6 +26,8 @@
 
 package org.opensearch.alerting.model
 
+import org.apache.logging.log4j.LogManager
+import org.opensearch.alerting.InputService
 import org.opensearch.alerting.core.model.CronSchedule
 import org.opensearch.alerting.core.model.Input
 import org.opensearch.alerting.core.model.LocalUriInput
@@ -79,6 +81,7 @@ data class Monitor(
     val uiMetadata: Map<String, Any>
 ) : ScheduledJob {
 
+    private val logger = LogManager.getLogger(Monitor::class.java)
     override val type = MONITOR_TYPE
 
     init {
@@ -153,7 +156,9 @@ data class Monitor(
     }
 
     override fun toXContent(builder: XContentBuilder, params: ToXContent.Params): XContentBuilder {
+
         builder.startObject()
+        logger.info("Entering toXContent")
         if (params.paramAsBoolean("with_type", false)) builder.startObject(type)
         builder.field(TYPE_FIELD, type)
             .field(SCHEMA_VERSION_FIELD, schemaVersion)
