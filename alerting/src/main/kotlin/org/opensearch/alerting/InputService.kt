@@ -102,7 +102,6 @@ class InputService(
                         results += withContext(Dispatchers.IO) {
                             response.toMap()
                         }
-                        logger.debug("toMap: $results")
                     }
                     else -> {
                         throw IllegalArgumentException("Unsupported input type: ${input.name()}.")

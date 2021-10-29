@@ -73,6 +73,8 @@ fun redactFieldsFromResponse(
     mappedActionResponse: Map<String, Any>,
     supportedJsonPayload: Map<String, ArrayList<String>>
 ): Map<String, Any> {
+    val logger = LogManager.getLogger()
+    logger.info("Entering redact")
     return when {
         supportedJsonPayload.isEmpty() -> mappedActionResponse
         else -> {
