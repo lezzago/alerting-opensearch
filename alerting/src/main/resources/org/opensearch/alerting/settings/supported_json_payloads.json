@@ -1,5 +1,5 @@
 {
   "/_cluster/health": {},
   "/_cluster/stats": {},
-  "/_nodes/hot_threads": {}
+  "/_nodes/stats": {}
 }
