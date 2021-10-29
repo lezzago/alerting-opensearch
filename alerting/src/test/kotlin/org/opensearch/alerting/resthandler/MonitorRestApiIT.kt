@@ -997,6 +997,7 @@ class MonitorRestApiIT : AlertingRestTestCase() {
             lastUpdateTime = Instant.now(),
             chime = chime,
             slack = null,
+            sns = null,
             customWebhook = null,
             email = null
         )

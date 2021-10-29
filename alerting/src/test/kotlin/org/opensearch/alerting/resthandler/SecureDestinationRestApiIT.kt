@@ -55,6 +55,7 @@ class SecureDestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = chime,
                 slack = null,
+                sns = null,
                 customWebhook = null,
                 email = null
             )
@@ -75,6 +76,7 @@ class SecureDestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = chime,
                 slack = null,
+                sns = null,
                 customWebhook = null,
                 email = null
             )
@@ -117,6 +119,7 @@ class SecureDestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = chime,
                 slack = null,
+                sns = null,
                 customWebhook = null,
                 email = null
             )
@@ -153,6 +156,7 @@ class SecureDestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = chime,
                 slack = null,
+                sns = null,
                 customWebhook = null,
                 email = null
             )
@@ -184,6 +188,7 @@ class SecureDestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = chime,
                 slack = null,
+                sns = null,
                 customWebhook = null,
                 email = null
             )
@@ -221,6 +226,7 @@ class SecureDestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = chime,
                 slack = null,
+                sns = null,
                 customWebhook = null,
                 email = null
             )
@@ -254,6 +260,7 @@ class SecureDestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = null,
                 slack = slack,
+                sns = null,
                 customWebhook = null,
                 email = null
             )
@@ -287,8 +294,9 @@ class SecureDestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = null,
                 slack = slack,
+                sns = null,
                 customWebhook = null,
-                email = null
+                email = null,
             )
 
             // 1. create a destination as admin user

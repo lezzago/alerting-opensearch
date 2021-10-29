@@ -241,6 +241,7 @@ fun getSlackDestination(): Destination {
         lastUpdateTime = Instant.now(),
         chime = null,
         slack = slack,
+        sns = null,
         customWebhook = null,
         email = null
     )
@@ -255,6 +256,7 @@ fun getChimeDestination(): Destination {
         lastUpdateTime = Instant.now(),
         chime = chime,
         slack = null,
+        sns = null,
         customWebhook = null,
         email = null
     )
@@ -280,6 +282,7 @@ fun getCustomWebhookDestination(): Destination {
         lastUpdateTime = Instant.now(),
         chime = null,
         slack = null,
+        sns = null,
         customWebhook = customWebhook,
         email = null
     )
@@ -295,6 +298,7 @@ fun getEmailDestination(): Destination {
         lastUpdateTime = Instant.now(),
         chime = null,
         slack = null,
+        sns = null,
         customWebhook = null,
         email = email
     )

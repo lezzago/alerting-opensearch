@@ -60,6 +60,7 @@ class IndexDestinationRequestTests : OpenSearchTestCase() {
                 Chime("test.com"),
                 null,
                 null,
+                null,
                 null
             )
         )
@@ -97,6 +98,7 @@ class IndexDestinationRequestTests : OpenSearchTestCase() {
                 randomUser(),
                 Instant.now(),
                 Chime("test.com"),
+                null,
                 null,
                 null,
                 null

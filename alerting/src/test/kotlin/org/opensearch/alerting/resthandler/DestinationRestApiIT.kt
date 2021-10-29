@@ -57,6 +57,7 @@ class DestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = chime,
                 slack = null,
+                sns = null,
                 customWebhook = null,
                 email = null
             )
@@ -77,6 +78,7 @@ class DestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = chime,
                 slack = null,
+                sns = null,
                 customWebhook = null,
                 email = null
             )
@@ -100,6 +102,7 @@ class DestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = chime,
                 slack = null,
+                sns = null,
                 customWebhook = null,
                 email = null
             )
@@ -130,6 +133,7 @@ class DestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = null,
                 slack = slack,
+                sns = null,
                 customWebhook = null,
                 email = null
             )
@@ -169,6 +173,7 @@ class DestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = null,
                 slack = null,
+                sns = null,
                 customWebhook = customWebhook,
                 email = null
             )
@@ -192,6 +197,7 @@ class DestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = null,
                 slack = null,
+                sns = null,
                 customWebhook = customWebhook,
                 email = null
             )
@@ -220,6 +226,7 @@ class DestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = null,
                 slack = null,
+                sns = null,
                 customWebhook = customWebhook,
                 email = null
             )
@@ -270,6 +277,7 @@ class DestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = null,
                 slack = null,
+                sns = null,
                 customWebhook = null,
                 email = email
             )
@@ -301,6 +309,7 @@ class DestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = null,
                 slack = null,
+                sns = null,
                 customWebhook = null,
                 email = email
             )
@@ -352,6 +361,7 @@ class DestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = chime,
                 slack = null,
+                sns = null,
                 customWebhook = null,
                 email = null
             )
@@ -393,6 +403,7 @@ class DestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = chime,
                 slack = null,
+                sns = null,
                 customWebhook = null,
                 email = null
             )
@@ -425,6 +436,7 @@ class DestinationRestApiIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = null,
                 slack = slack,
+                sns = null,
                 customWebhook = null,
                 email = null
             )

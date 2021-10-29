@@ -355,6 +355,7 @@ class DestinationActionsConverterTests : OpenSearchTestCase() {
             lastUpdateTime = Instant.now(),
             chime = null,
             slack = null,
+            sns = null,
             customWebhook = alertWebhook,
             email = null
         )
@@ -399,6 +400,7 @@ class DestinationActionsConverterTests : OpenSearchTestCase() {
             lastUpdateTime = Instant.now(),
             chime = null,
             slack = null,
+            sns = null,
             customWebhook = alertWebhook,
             email = null
         )
@@ -431,6 +433,7 @@ class DestinationActionsConverterTests : OpenSearchTestCase() {
             lastUpdateTime = Instant.now(),
             chime = null,
             slack = null,
+            sns = null,
             customWebhook = null,
             email = null
         )
@@ -482,6 +485,7 @@ class DestinationActionsConverterTests : OpenSearchTestCase() {
             lastUpdateTime = Instant.now(),
             chime = null,
             slack = null,
+            sns = null,
             customWebhook = null,
             email = null
         )
@@ -533,6 +537,7 @@ class DestinationActionsConverterTests : OpenSearchTestCase() {
             lastUpdateTime = Instant.now(),
             chime = null,
             slack = null,
+            sns = null,
             customWebhook = null,
             email = null
         )
@@ -587,6 +592,7 @@ class DestinationActionsConverterTests : OpenSearchTestCase() {
             lastUpdateTime = Instant.now(),
             chime = null,
             slack = null,
+            sns = null,
             customWebhook = null,
             email = email
         )
@@ -620,6 +626,7 @@ class DestinationActionsConverterTests : OpenSearchTestCase() {
             lastUpdateTime = Instant.now(),
             chime = null,
             slack = null,
+            sns = null,
             customWebhook = null,
             email = null
         )
@@ -648,6 +655,7 @@ class DestinationActionsConverterTests : OpenSearchTestCase() {
             lastUpdateTime = Instant.now(),
             chime = null,
             slack = null,
+            sns = null,
             customWebhook = null,
             email = null
         )
@@ -676,6 +684,7 @@ class DestinationActionsConverterTests : OpenSearchTestCase() {
             lastUpdateTime = Instant.now(),
             chime = null,
             slack = null,
+            sns = null,
             customWebhook = null,
             email = null
         )

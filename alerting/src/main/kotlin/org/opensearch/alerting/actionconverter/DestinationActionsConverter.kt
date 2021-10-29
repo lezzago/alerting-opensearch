@@ -37,6 +37,7 @@ import org.opensearch.alerting.action.IndexDestinationRequest
 import org.opensearch.alerting.action.IndexDestinationResponse
 import org.opensearch.alerting.model.destination.CustomWebhook
 import org.opensearch.alerting.model.destination.Destination
+import org.opensearch.alerting.model.destination.SNS
 import org.opensearch.alerting.model.destination.email.Recipient
 import org.opensearch.alerting.util.DestinationType
 import org.opensearch.alerting.util.IndexUtils
@@ -59,6 +60,7 @@ import org.opensearch.commons.notifications.model.HttpMethodType
 import org.opensearch.commons.notifications.model.NotificationConfig
 import org.opensearch.commons.notifications.model.NotificationConfigInfo
 import org.opensearch.commons.notifications.model.Slack
+import org.opensearch.commons.notifications.model.Sns
 import org.opensearch.commons.notifications.model.Webhook
 import org.opensearch.index.Index
 import org.opensearch.index.shard.ShardId
@@ -192,6 +194,7 @@ class DestinationActionsConverter {
                         null,
                         alertSlack,
                         null,
+                        null,
                         null
                     )
                 }
@@ -210,6 +213,27 @@ class DestinationActionsConverter {
                         notificationConfigInfo.lastUpdatedTime,
                         alertChime,
                         null,
+                        null,
+                        null,
+                        null
+                    )
+                }
+                ConfigType.SNS -> {
+                    val sns = notificationConfig.configData as Sns
+                    val alertSNS = SNS(sns.topicArn, sns.roleArn!!)
+                    return Destination(
+                        notificationConfigInfo.configId,
+                        Destination.NO_VERSION,
+                        IndexUtils.NO_SCHEMA_VERSION,
+                        Destination.NO_SEQ_NO,
+                        Destination.NO_PRIMARY_TERM,
+                        DestinationType.SNS,
+                        notificationConfig.name,
+                        null,
+                        notificationConfigInfo.lastUpdatedTime,
+                        null,
+                        null,
+                        alertSNS,
                         null,
                         null
                     )
@@ -247,6 +271,7 @@ class DestinationActionsConverter {
                         notificationConfigInfo.lastUpdatedTime,
                         null,
                         null,
+                        null,
                         alertWebhook,
                         null
                     )
@@ -273,6 +298,7 @@ class DestinationActionsConverter {
                         notificationConfig.name,
                         null,
                         notificationConfigInfo.lastUpdatedTime,
+                        null,
                         null,
                         null,
                         null,
@@ -319,6 +345,18 @@ class DestinationActionsConverter {
                         ConfigType.SLACK,
                         setOf(NotificationConstants.FEATURE_ALERTING),
                         slack
+                    )
+                }
+                DestinationType.SNS -> {
+                    val alertSNS = destination.sns ?: return null
+                    val sns = Sns(alertSNS.topicARN, alertSNS.roleARN)
+                    val description = "SNS destination created from the Alerting plugin"
+                    return NotificationConfig(
+                        destination.name,
+                        description,
+                        ConfigType.SNS,
+                        setOf(NotificationConstants.FEATURE_ALERTING),
+                        sns
                     )
                 }
                 DestinationType.CUSTOM_WEBHOOK -> {

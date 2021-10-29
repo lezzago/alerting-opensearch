@@ -884,6 +884,7 @@ class MonitorRunnerIT : AlertingRestTestCase() {
                     lastUpdateTime = Instant.now(),
                     chime = null,
                     slack = null,
+                    sns = null,
                     customWebhook = customWebhook,
                     email = null
                 )

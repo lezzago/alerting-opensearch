@@ -26,6 +26,8 @@
 
 package org.opensearch.alerting.model.destination
 
+import org.opensearch.common.io.stream.StreamInput
+import org.opensearch.common.io.stream.StreamOutput
 import org.opensearch.common.xcontent.ToXContent
 import org.opensearch.common.xcontent.XContentBuilder
 import org.opensearch.common.xcontent.XContentParser
@@ -46,6 +48,12 @@ data class SNS(val topicARN: String, val roleARN: String) : ToXContent {
             .field(TOPIC_ARN_FIELD, topicARN)
             .field(ROLE_ARN_FIELD, roleARN)
             .endObject()
+    }
+
+    @Throws(IOException::class)
+    fun writeTo(out: StreamOutput) {
+        out.writeString(topicARN)
+        out.writeString(roleARN)
     }
 
     companion object {
@@ -79,6 +87,17 @@ data class SNS(val topicARN: String, val roleARN: String) : ToXContent {
                 requireNotNull(topicARN) { "SNS Action topic_arn is null" },
                 requireNotNull(roleARN) { "SNS Action role_arn is null" }
             )
+        }
+
+        @JvmStatic
+        @Throws(IOException::class)
+        fun readFrom(sin: StreamInput): SNS? {
+            return if (sin.readBoolean()) {
+                SNS(
+                    topicARN = sin.readString(),
+                    roleARN = sin.readString()
+                )
+            } else null
         }
     }
 }

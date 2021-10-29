@@ -58,8 +58,9 @@ class MigrationUtilServiceIT : AlertingRestTestCase() {
                 lastUpdateTime = Instant.now(),
                 chime = null,
                 slack = null,
+                sns = null,
                 customWebhook = null,
-                email = email
+                email = email,
             )
             val slackDestination = getSlackDestination().copy(id = UUID.randomUUID().toString())
             val chimeDestination = getChimeDestination().copy(id = UUID.randomUUID().toString())
