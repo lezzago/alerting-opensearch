@@ -35,7 +35,6 @@ class RestGetFindingsSearchAction : BaseRestHandler() {
 
     override fun routes(): List<Route> {
         return listOf(
-            Route(POST, "${AlertingPlugin.FINDING_BASE_URI}/_search"),
             Route(GET, "${AlertingPlugin.FINDING_BASE_URI}/_search")
         )
     }

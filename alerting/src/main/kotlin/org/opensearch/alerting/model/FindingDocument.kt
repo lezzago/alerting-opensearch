@@ -16,7 +16,7 @@ class FindingDocument(
     val index: String,
     val id: String,
     val found: Boolean,
-    val document: MutableMap<String, Any>
+    val document: Map<String, Any>
 ) : Writeable, ToXContent {
 
     @Throws(IOException::class)

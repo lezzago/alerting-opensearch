@@ -121,8 +121,8 @@ class Finding(
             val queryTags: MutableList<String> = mutableListOf()
             lateinit var severity: String
             lateinit var timestamp: Instant
-            lateinit var triggerId: String
-            lateinit var triggerName: String
+            var triggerId: String? = null
+            var triggerName: String? = null
 
             ensureExpectedToken(XContentParser.Token.START_OBJECT, xcp.currentToken(), xcp)
             while (xcp.nextToken() != XContentParser.Token.END_OBJECT) {
@@ -145,8 +145,8 @@ class Finding(
                     TIMESTAMP_FIELD -> {
                         timestamp = requireNotNull(xcp.instant())
                     }
-                    TRIGGER_ID_FIELD -> triggerId = xcp.text()
-                    TRIGGER_NAME_FIELD -> triggerName = xcp.text()
+                    TRIGGER_ID_FIELD -> triggerId = if (xcp.currentToken() == XContentParser.Token.VALUE_NULL) null else xcp.text()
+                    TRIGGER_NAME_FIELD -> triggerName = if (xcp.currentToken() == XContentParser.Token.VALUE_NULL) null else xcp.text()
                 }
             }
 
